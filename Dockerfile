@@ -7,7 +7,14 @@ COPY . .
 RUN go mod download
 RUN go mod verify
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags="-w -s" -o /go/bin/updater
+
+
+RUN export CGO_ENABLED=0; \
+    export GOOS=linux; \
+    [ $TARGETPLATFORM == "linux/amd64" ] && export GOARCH=amd64; \
+    [ $TARGETPLATFORM == "linux/arm64" ] && export GOARCH=arm64; \
+    [ $TARGETPLATFORM == "linux/arm/v7" ] && export GOARCH=arm; \
+    go build -ldflags="-w -s" -o /go/bin/updater;
 
 ##
 FROM scratch
