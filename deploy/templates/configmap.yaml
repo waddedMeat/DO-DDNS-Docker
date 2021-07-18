@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: do-ddns-config
+  namespace: {{ .Release.Namespace }}
+data:
+  DOMAIN: locosoftworks.com
+  LOG_PATH: /home/do
+  NAMES: testing.locosoftworks.com

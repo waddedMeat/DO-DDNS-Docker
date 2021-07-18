@@ -1,0 +1,14 @@
+{{ if false }}
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: foo
+  namespace: {{ .Release.Namespace }}
+subsets:
+- addresses:
+  - ip: 192.168.86.248
+  ports:
+  - name: app
+    port: 80
+    protocol: TCP
+{{ end }}

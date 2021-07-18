@@ -1,0 +1,53 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  labels:
+    app.kubernetes.io/name: do-dns-update
+  name: do-dns-update
+  namespace: {{ .Release.Namespace }}
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    metadata:
+      creationTimestamp: null
+      name: do-dns-update
+    spec:
+      template:
+        metadata:
+          creationTimestamp: null
+        spec:
+          containers:
+          - env:
+            - name: TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: do-token
+                  key: token
+            envFrom:
+              - configMapRef:
+                  name: do-ddns-config
+            image: waddedmeat/do-ddns:master
+            imagePullPolicy: IfNotPresent
+            name: do-dns-update
+            resources: {}
+            terminationMessagePath: /dev/termination-log
+            terminationMessagePolicy: File
+            volumeMounts:
+            - mountPath: /home/do
+              name: log-path
+          dnsPolicy: ClusterFirst
+          restartPolicy: OnFailure
+          schedulerName: default-scheduler
+          securityContext: {}
+          terminationGracePeriodSeconds: 30
+          volumes:
+          - name: do-token
+            secret:
+              secretName: do-token
+          - name: log-path
+            persistentVolumeClaim:
+              claimName: do-dns-update-log
+  schedule: 0 * * * *
+  successfulJobsHistoryLimit: 1
+  suspend: false

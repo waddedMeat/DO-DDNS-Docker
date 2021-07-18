@@ -20,7 +20,7 @@ func main() {
 		os.Exit(255)
 	}
 
-	if changed != false {
+	if changed == false {
 		fmt.Println("no change")
 		os.Exit(0)
 	}
@@ -34,7 +34,7 @@ func main() {
 func updateDNS(token string, domain string, names []string, currentIP *string) error {
 
 	if token == "" || domain == "" || len(names) == 0 {
-		return errors.New("missing token, domain, and/or names")
+		return errors.New("missing required config")
 	}
 
 	client := godo.NewFromToken(token)
@@ -49,9 +49,8 @@ func updateDNS(token string, domain string, names []string, currentIP *string) e
 		}
 
 		for _, record := range records {
-			request := createDomainRecordEditRequest(record)
+			request := &godo.DomainRecordEditRequest{}
 			record.Data = *currentIP
-
 			_, _, err := client.Domains.EditRecord(ctx, domain, record.ID, request)
 			if err != nil {
 				fmt.Println(err)
@@ -83,20 +82,6 @@ func getIPChange(logPath string) (bool, *string, error) {
 	return false, nil, nil
 }
 
-func createDomainRecordEditRequest(record godo.DomainRecord) *godo.DomainRecordEditRequest {
-	return &godo.DomainRecordEditRequest{
-		Type:     record.Type,
-		Name:     record.Name,
-		Data:     record.Data,
-		Priority: record.Priority,
-		Port:     record.Port,
-		TTL:      record.TTL,
-		Weight:   record.Weight,
-		Flags:    record.Flags,
-		Tag:      record.Tag,
-	}
-}
-
 //plucked from https://gist.github.com/ankanch/8c8ec5aaf374039504946e7e2b2cdf7f
 func getCurrentIP() string {
 	url := "https://api.ipify.org?format=text"
@@ -111,7 +96,9 @@ func getCurrentIP() string {
 	if err != nil {
 		panic(err)
 	}
-	defer resp.Body.Close()
+	defer func() {
+		_ = resp.Body.Close()
+	}()
 	ip, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		panic(err)
